@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>高低音数字钢琴 - 初学者版</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background-color: #f0f0f0;
+            font-family: Arial, sans-serif;
+        }
+        .piano {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        .piano-row {
+            display: grid;
+            grid-template-columns: repeat(7, 80px);
+            gap: 10px;
+        }
+        .key {
+            width: 80px;
+            height: 120px;
+            background-color: white;
+            border: 2px solid #333;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            position: relative;
+        }
+        .key:hover {
+            background-color: #e0e0e0;
+        }
+        .key.active {
+            background-color: #a0c4ff;
+        }
+        .key.high {
+            background-color: #f8f9fa;
+            border-color: #666;
+        }
+        .key.high::after {
+            content: "̇";
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 30px;
+        }
+        .title {
+            margin-bottom: 20px;
+            font-size: 28px;
+            color: #333;
+        }
+        .tip {
+            margin-top: 20px;
+            color: #666;
+            text-align: center;
+            line-height: 1.5;
+        }
+    </style>
+</head>
+<body>
+    <h1 class="title">数字钢琴 (1=Do 1̇=高音Do)</h1>
+    <div class="piano">
+        <div class="piano-row">
+            <div class="key high" data-key="h1">1</div>
+            <div class="key high" data-key="h2">2</div>
+            <div class="key high" data-key="h3">3</div>
+            <div class="key high" data-key="h4">4</div>
+            <div class="key high" data-key="h5">5</div>
+            <div class="key high" data-key="h6">6</div>
+            <div class="key high" data-key="h7">7</div>
+        </div>
+        <div class="piano-row">
+            <div class="key" data-key="1">1</div>
+            <div class="key" data-key="2">2</div>
+            <div class="key" data-key="3">3</div>
+            <div class="key" data-key="4">4</div>
+            <div class="key" data-key="5">5</div>
+            <div class="key" data-key="6">6</div>
+            <div class="key" data-key="7">7</div>
+        </div>
+    </div>
+    <p class="tip">提示：点击琴键发声 | 中音按数字1-7 | 高音按<span style="color: #007bff;">Shift+数字1-7</span></p>
+
+    <script>
+        // 定义中音、高音对应频率（C大调）
+        const noteFrequencies = {
+            // 中音组 C4-B4
+            1: 261.63, 2: 293.66, 3: 329.63, 4: 349.23, 5: 392.00, 6: 440.00, 7: 493.88,
+            // 高音组 C5-B5（频率是中音的2倍）
+            h1: 523.25, h2: 587.33, h3: 659.25, h4: 698.46, h5: 783.99, h6: 880.00, h7: 987.77
+        };
+
+        let audioContext;
+
+        // 播放音符函数
+        function playNote(key) {
+            if (!audioContext) {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            const oscillator = audioContext.createOscillator();
+            oscillator.type = 'sine';
+            oscillator.frequency.setValueAtTime(noteFrequencies[key], audioContext.currentTime);
+            oscillator.connect(audioContext.destination);
+            oscillator.start();
+            oscillator.stop(audioContext.currentTime + 0.5);
+        }
+
+        // 琴键点击事件
+        const keys = document.querySelectorAll('.key');
+        keys.forEach(key => {
+            key.addEventListener('click', () => {
+                const keyCode = key.dataset.key;
+                playNote(keyCode);
+                key.classList.add('active');
+                setTimeout(() => key.classList.remove('active'), 200);
+            });
+        });
+
+        // 键盘按键事件：中音=数字1-7，高音=Shift+数字1-7
+        window.addEventListener('keydown', (e) => {
+            if (e.key >= 1 && e.key <= 7) {
+                const keyCode = e.shiftKey ? `h${e.key}` : e.key;
+                playNote(keyCode);
+                const activeKey = document.querySelector(`.key[data-key="${keyCode}"]`);
+                if (activeKey) {
+                    activeKey.classList.add('active');
+                    setTimeout(() => activeKey.classList.remove('active'), 200);
+                }
+            }
+        });
+    </script>
+</body>
+</html>
